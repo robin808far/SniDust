@@ -1,14 +1,23 @@
 services:
-    sniDust:
-        container_name: sniDust
-        environment:
-            - 'ALLOWED_CLIENTS=127.0.0.1/32, myDynDNSDomain.no-ip.com' # CHANGE THIS
-            - 'EXTERNAL_IP=10.111.123.8' # CHANGE THIS TO YOUR VPS PUBLIC IP
-            - TZ=Europe/Berlin
-        ports:
-            - '443:8443'
-            - '80:8080'
-            - '53:5300/udp'
-            - '53:5300/tcp'
-        image: 'ghcr.io/seji64/snidust:main'
-        restart: unless-stopped
+  sniDust:
+    build: .
+    container_name: sniDust
+    environment:
+      - 'ALLOWED_CLIENTS=127.0.0.1/32'
+      - 'EXTERNAL_IP=YOUR_SERVER_PUBLIC_IP'  # آدرس آی‌پی عمومی سرور خود را بگذارید
+      - 'PANEL_USER=admin'                  # نام کاربری پنل وب
+      - 'PANEL_PASS=MyStrongPassword123'    # رمز عبور پنل وب
+      - 'PANEL_PORT=8085'
+      - TZ=Europe/Berlin
+    ports:
+      - '443:8443'
+      - '80:8080'
+      - '53:5300/udp'
+      - '53:5300/tcp'
+      - '8085:8085'
+    volumes:
+      - snidust_data:/etc/snidust
+    restart: unless-stopped
+
+volumes:
+  snidust_data:
