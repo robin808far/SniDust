@@ -4,7 +4,7 @@ ARG TARGETPLATFORM
 
 ENV DNSDIST_BIND_IP=0.0.0.0
 ENV ALLOWED_CLIENTS=127.0.0.1
-ENV ALLOWED_CLIENTS_FILE=
+ENV ALLOWED_CLIENTS_FILE=/etc/snidust/clients.txt
 ENV EXTERNAL_IP=
 
 ENV DNSDIST_ENABLE_DOT=false
@@ -30,37 +30,23 @@ ENV SPOOF_ALL_DOMAINS=false
 ENV DYNDNS_CRON_SCHEDULE="*/15 * * * *"
 ENV INSTALL_DEFAULT_DOMAINS=true
 
-# HEALTHCHECKS
 HEALTHCHECK --interval=30s --timeout=3s CMD (pgrep "dnsdist" > /dev/null && pgrep "nginx" > /dev/null) || exit 1
 
-# Expose Ports
 EXPOSE 5300/udp
 EXPOSE 8080/tcp
 EXPOSE 8443/tcp
 EXPOSE 8083/tcp
 EXPOSE 8530/tcp
+EXPOSE 8085/tcp
 
-RUN echo "I'm building for $TARGETPLATFORM"
-
-# Update Base
-RUN apk update && apk upgrade
-
-# Create Users
-RUN addgroup snidust && adduser -D -H -G snidust snidust
-
-# Install needed packages and clean up
-RUN apk add --no-cache jq tini dnsdist curl bash gnupg procps ca-certificates openssl dog lua5.4-filesystem ipcalc libcap nginx nginx-mod-stream supercronic step-cli && \
+RUN apk update && apk upgrade && \
+    apk add --no-cache jq tini dnsdist curl bash gnupg procps ca-certificates \
+    openssl dog lua5.4-filesystem ipcalc libcap nginx nginx-mod-stream supercronic step-cli python3 && \
     rm -f /etc/nginx/conf.d/*.conf && \
     rm -rf /var/cache/apk/*
 
-# Setup Folder(s)
-RUN mkdir -p /etc/dnsdist/conf.d && \
-    mkdir -p /etc/dnsdist/certs && \
-    mkdir -p /etc/snidust/domains.d && \
-    mkdir -p /etc/sniproxy/ && \
-    mkdir -p /var/lib/snidust/domains.d
+RUN mkdir -p /etc/dnsdist/conf.d /etc/dnsdist/certs /etc/snidust/domains.d /etc/sniproxy/ /var/lib/snidust/domains.d
 
-# Copy Files
 COPY configs/dnsdist/dnsdist.conf.template /etc/dnsdist/dnsdist.conf.template
 COPY configs/dnsdist/conf.d/00-SniDust.conf /etc/dnsdist/conf.d/00-SniDust.conf
 COPY configs/nginx/nginx.conf /etc/nginx/nginx.conf
@@ -69,16 +55,10 @@ COPY domains.d /var/lib/snidust/domains.d
 COPY entrypoint.sh /entrypoint.sh
 COPY generateACL.sh /generateACL.sh
 COPY dynDNSCron.sh /dynDNSCron.sh
+COPY webpanel.py /webpanel.py
 
-RUN chown -R snidust:snidust /etc/dnsdist/ && \
-    chown -R snidust:snidust /etc/snidust/ && \
-    chown -R snidust:snidust /etc/nginx/ && \
-    chown -R snidust:snidust /var/log/nginx/ && \
-    chown -R snidust:snidust /var/lib/nginx/ && \
-    chown -R snidust:snidust /run/nginx/ && \
-    chmod +x /entrypoint.sh && \
-    chmod +x /generateACL.sh && \
-    chmod +x dynDNSCron.sh
+RUN chown -R snidust:snidust /etc/dnsdist/ /etc/snidust/ /etc/nginx/ /var/log/nginx/ /var/lib/nginx/ /run/nginx/ && \
+    chmod +x /entrypoint.sh /generateACL.sh /dynDNSCron.sh
 
 USER snidust
 
