@@ -1,10 +1,10 @@
 services:
   sniDust:
-    build: .
+    image: ghcr.io/robin808far/snidust:main
     container_name: sniDust
     environment:
       - 'ALLOWED_CLIENTS=127.0.0.1/32'
-      - 'EXTERNAL_IP=YOUR_SERVER_PUBLIC_IP'  # آدرس آی‌پی عمومی سرور خود را بگذارید
+      - 'EXTERNAL_IP=YOUR_SERVER_PUBLIC_IP'  # آی‌پی عمومی سرور خود را اینجا بگذارید
       - 'PANEL_USER=admin'                  # نام کاربری پنل وب
       - 'PANEL_PASS=MyStrongPassword123'    # رمز عبور پنل وب
       - 'PANEL_PORT=8085'
